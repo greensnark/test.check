@@ -18,7 +18,7 @@
 
 (defn assert-check
   [{:keys [result result-data] :as m}]
-  (if (and (not (results/passing? result))
+  (if (and (not (results/pass? result))
            (exception-like? (:clojure.test.check.properties/error result-data)))
     (throw (:clojure.test.check.properties/error result-data))
     (ct/is (clojure.test.check.clojure-test/check? m))))

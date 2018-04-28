@@ -130,7 +130,7 @@
           (tc/quick-check 100
                           (prop/for-all [x gen/nat]
                             (reify results/Result
-                              (passing? [_] false)
+                              (pass? [_] false)
                               (result-data [_]
                                 {:foo :bar :baz [42]}))))))))
 
@@ -1056,7 +1056,7 @@
     (tc/quick-check 100 prop :reporter-fn reporter-fn)
     (let [shrink-steps (filter #(= :shrink-step (:type %)) @events)
           [passing-steps failing-steps] ((juxt filter remove)
-                                         #(-> % :shrinking :result results/passing?)
+                                         #(-> % :shrinking :result results/pass?)
                                          shrink-steps)
           get-args-and-smallest-args (juxt (comp first :args :shrinking)
                                            (comp first :smallest :shrinking))]
@@ -1180,3 +1180,39 @@
     (is (:result (tc/quick-check 1000 p)))
     (is (= 1000 (count @a)))
     (is (every? integer? @a))))
+
+;; TCHECK-142
+;; ---------------------------------------------------------------------------
+
+(deftest quick-check-result-keys-test
+  (testing "Pass"
+    (let [m (tc/quick-check 10 (prop/for-all [x gen/nat] x))]
+      (is (true? (:result m)))
+      (is (true? (:pass? m)))
+      (is (not (contains? m :result-data)))))
+  (testing "Falsy Fail"
+    (let [m (tc/quick-check 10 (prop/for-all [x gen/nat] false))]
+      (is (false? (:result m)))
+      (is (false? (:pass? m)))
+      (is (= {:foo 42} (:result-data m)))))
+  (testing "Protocol Fail"
+    (let [m (tc/quick-check 1000 (prop/for-all [x gen/nat]
+                                   (reify results/Result
+                                     (pass? [_] (< x 70))
+                                     (result-data [_] {:foo 42 :x x}))))]
+      (is (false? (:result m)))
+      (is (false? (:pass? m)))
+      (let [[x] (:fail m)]
+        (is (= {:foo 42 :x x} (:result-data m))))
+      (is (= {:foo 42 :x 71} (:result-data (:shrunk m))))))
+  (testing "Error"
+    (let [m (tc/quick-check 1000 (prop/for-all [x gen/nat]
+                                   (or (< x 70)
+                                       (throw (ex-info "Dang!" {:x x})))))]
+      (is (instance? clojure.lang.ExceptionInfo (:result m))
+          "legacy position for the error object")
+      (is (false? (:pass? m)))
+      (is (= [::prop/error] (keys (:result-data m))))
+      (let [[x] (:fail m)]
+        (is (= {:x x} (-> m :result-data ::prop/error ex-data))))
+      (is (= 71 (-> m :shrunk :result-data ::prop/error ex-data :x))))))

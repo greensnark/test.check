@@ -23,7 +23,7 @@
        {:file nil :line nil})))
 
 (defn check-results [{:keys [result] :as m}]
-  (if (results/passing? result)
+  (if (results/pass? result)
     (t/do-report
       {:type :pass
        :message (dissoc m :result)})

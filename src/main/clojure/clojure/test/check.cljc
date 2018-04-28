@@ -34,6 +34,20 @@
 
   {:result true :num-tests num-trials :seed seed})
 
+(defn ^:private maybe-unwrap-exception
+  [result]
+  (if (instance? results/IResult result)
+    (-> result
+        results/result-data
+        :clojure.test.check.properties/error
+        (or result))
+    (let [d ]
+      (if (= [] (keys ))())))
+  (if (and
+           )
+    (-> result results/)
+    result))
+
 (defn quick-check
   "Tests `property` `num-tests` times.
 
@@ -60,6 +74,7 @@
        :num-tests       <number of tests run so far>
        :num-tests-total <total number of tests to be run>
        :seed            42
+       :pass?           true
        :property        #<...>
        :result          true
        :result-data     {...}}
@@ -69,6 +84,7 @@
        :fail         [...failing args...]
        :failing-size 13
        :num-tests    <tests ran before failure found>
+       :pass?        false
        :property     #<...>
        :result       false/exception
        :result-data  {...}
@@ -103,12 +119,13 @@
               result (:result result-map)
               args (:args result-map)
               so-far (inc so-far)]
-          (if (results/passing? result)
+          (if (results/pass? result)
             (do
               (reporter-fn {:type            :trial
                             :args            args
                             :num-tests       so-far
                             :num-tests-total num-tests
+                            :pass?           true
                             :property        property
                             :result          result
                             :result-data     (results/result-data result)
@@ -121,7 +138,8 @@
   (let [{:keys [result]} smallest]
     {:total-nodes-visited total-nodes-visited
      :depth depth
-     :result (results/passing? result)
+     :pass? false
+     :result (results/pass? result)
      :result-data (results/result-data result)
      :smallest (:args smallest)}))
 
@@ -153,14 +171,16 @@
               tail (rest nodes)
               result (:result (rose/root head))
               args (:args (rose/root head))
+              pass? (results/pass? result)
               reporter-fn-arg {:type :shrink-step
                                :shrinking {:args                args
                                            :depth               depth
+                                           :pass?               (boolean pass?)
                                            :result              result
                                            :result-data         (results/result-data result)
                                            :smallest            (:args current-smallest)
                                            :total-nodes-visited total-nodes-visited}}]
-          (if (results/passing? result)
+          (if pass?
             ;; this node passed the test, so now try testing its right-siblings
             (do
               (reporter-fn reporter-fn-arg)
@@ -184,8 +204,9 @@
         failure-data {:fail         (:args root)
                       :failing-size size
                       :num-tests    trial-number
+                      :pass?        false
                       :property     property
-                      :result       (results/passing? result)
+                      :result       (results/pass? result)
                       :result-data  (results/result-data result)
                       :seed         seed}]
 
