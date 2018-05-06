@@ -35,19 +35,16 @@
   {:result true :num-tests num-trials :seed seed})
 
 
-;; (defn ^:private maybe-unwrap-exception
-;;   [result]
-;;   (if (instance? results/IResult result)
-;;     (-> result
-;;         results/result-data
-;;         :clojure.test.check.properties/error
-;;         (or result))
-;;     (let [d ]
-;;       (if (= [] (keys ))())))
-;;   (if (and
-;;            )
-;;     (-> result results/)
-;;     result))
+(defn ^:private legacy-result
+  "Returns a value for the legacy :result key, which has the peculiar
+  property of conflating returned exceptions with thrown exceptions."
+  [result]
+  (if (satisfies? results/Result result)
+    (let [d (results/result-data result)]
+      (if-let [[_ e] (find d :clojure.test.check.properties/error)]
+        e
+        (results/pass? result)))
+    result))
 
 (defn quick-check
   "Tests `property` `num-tests` times.
@@ -140,7 +137,7 @@
     {:total-nodes-visited total-nodes-visited
      :depth depth
      :pass? false
-     :result (results/pass? result)
+     :result (legacy-result result)
      :result-data (results/result-data result)
      :smallest (:args smallest)}))
 
@@ -207,7 +204,7 @@
                       :num-tests    trial-number
                       :pass?        false
                       :property     property
-                      :result       (results/pass? result)
+                      :result       (legacy-result result)
                       :result-data  (results/result-data result)
                       :seed         seed}]
 
