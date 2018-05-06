@@ -34,19 +34,20 @@
 
   {:result true :num-tests num-trials :seed seed})
 
-(defn ^:private maybe-unwrap-exception
-  [result]
-  (if (instance? results/IResult result)
-    (-> result
-        results/result-data
-        :clojure.test.check.properties/error
-        (or result))
-    (let [d ]
-      (if (= [] (keys ))())))
-  (if (and
-           )
-    (-> result results/)
-    result))
+
+;; (defn ^:private maybe-unwrap-exception
+;;   [result]
+;;   (if (instance? results/IResult result)
+;;     (-> result
+;;         results/result-data
+;;         :clojure.test.check.properties/error
+;;         (or result))
+;;     (let [d ]
+;;       (if (= [] (keys ))())))
+;;   (if (and
+;;            )
+;;     (-> result results/)
+;;     result))
 
 (defn quick-check
   "Tests `property` `num-tests` times.

@@ -1204,15 +1204,24 @@
       (is (false? (:pass? m)))
       (let [[x] (:fail m)]
         (is (= {:foo 42 :x x} (:result-data m))))
-      (is (= {:foo 42 :x 71} (:result-data (:shrunk m))))))
+      (is (= {:foo 42 :x 70} (:result-data (:shrunk m))))))
   (testing "Error"
     (let [m (tc/quick-check 1000 (prop/for-all [x gen/nat]
                                    (or (< x 70)
                                        (throw (ex-info "Dang!" {:x x})))))]
+      ;; okay maybe this is where cljs needs to do something different
       (is (instance? clojure.lang.ExceptionInfo (:result m))
           "legacy position for the error object")
       (is (false? (:pass? m)))
       (is (= [::prop/error] (keys (:result-data m))))
       (let [[x] (:fail m)]
         (is (= {:x x} (-> m :result-data ::prop/error ex-data))))
-      (is (= 71 (-> m :shrunk :result-data ::prop/error ex-data :x))))))
+      (is (= 70 (-> m :shrunk :result-data ::prop/error ex-data :x))))))
+
+;; TCHECK-150
+;; ---------------------------------------------------------------------------
+
+#?(:cljs
+   (deftest throwing-arbitrary-objects-fails-tests-in-cljs
+     (is (:shrunk
+          (tc/quick-check 10 (prop/for-all [x gen/nat] (throw "a string")))))))
