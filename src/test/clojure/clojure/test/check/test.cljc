@@ -1210,7 +1210,9 @@
                                    (or (< x 70)
                                        (throw (ex-info "Dang!" {:x x})))))]
       ;; okay maybe this is where cljs needs to do something different
-      (is (instance? clojure.lang.ExceptionInfo (:result m))
+      (is (instance? #?(:clj  clojure.lang.ExceptionInfo
+                        :cljs ExceptionInfo)
+                     (:result m))
           "legacy position for the error object")
       (is (false? (:pass? m)))
       (is (= [::prop/error] (keys (:result-data m))))
@@ -1224,7 +1226,7 @@
 #?(:cljs
    (deftest throwing-arbitrary-objects-fails-tests-in-cljs
      (let [res (tc/quick-check 10 (prop/for-all [x gen/nat] (throw "a string")))]
-       (is (false? (:pass res)) "is definitely a failure")
+       (is (false? (:pass? res)) "is definitely a failure")
        (is (:shrunk res) "evidenced by the fact that it shrunk")
        (is (instance? js/Error (:result res))
            "The legacy :result key has an Error object so nobody gets confused"))))

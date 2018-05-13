@@ -46,7 +46,12 @@
   (if (satisfies? results/Result result)
     (let [d (results/result-data result)]
       (if-let [[_ e] (find d :clojure.test.check.properties/error)]
-        e
+        #?(:clj e
+           :cljs (if (instance? js/Error e)
+                   e
+                   (ex-info "Non-Error object thrown in test"
+                            {}
+                            e)))
         (results/pass? result)))
     result))
 
