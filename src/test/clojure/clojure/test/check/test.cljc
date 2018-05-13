@@ -1223,5 +1223,8 @@
 
 #?(:cljs
    (deftest throwing-arbitrary-objects-fails-tests-in-cljs
-     (is (:shrunk
-          (tc/quick-check 10 (prop/for-all [x gen/nat] (throw "a string")))))))
+     (let [res (tc/quick-check 10 (prop/for-all [x gen/nat] (throw "a string")))]
+       (is (false? (:pass res)) "is definitely a failure")
+       (is (:shrunk res) "evidenced by the fact that it shrunk")
+       (is (instance? js/Error (:result res))
+           "The legacy :result key has an Error object so nobody gets confused"))))
