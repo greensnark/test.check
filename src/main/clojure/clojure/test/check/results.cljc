@@ -18,8 +18,8 @@
 (extend-protocol Result
   #?(:clj Object :cljs default)
   (pass? [this] (boolean this))
-  (result-data [this] {})
+  (result-data [this] nil)
 
   nil
   (pass? [this] false)
-  (result-data [this] {}))
+  (result-data [this] nil))

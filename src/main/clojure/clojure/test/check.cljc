@@ -29,10 +29,14 @@
   (reporter-fn {:type :complete
                 :property property
                 :result true
+                :pass? true
                 :num-tests num-trials
                 :seed seed})
 
-  {:result true :num-tests num-trials :seed seed})
+  {:result true
+   :pass? true
+   :num-tests num-trials
+   :seed seed})
 
 
 (defn ^:private legacy-result

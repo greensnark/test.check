@@ -140,7 +140,7 @@
                  :cljs js/Error.)
               "Let's pretend this was thrown.")
              #?(:clj (Error. "Not an Exception, technically"))]]
-    (is (false? (:result
+    (is (false? (:pass?
                  (tc/quick-check 100
                                  (prop/for-all [x gen/nat]
                                    e)))))))
@@ -1194,7 +1194,7 @@
     (let [m (tc/quick-check 10 (prop/for-all [x gen/nat] false))]
       (is (false? (:result m)))
       (is (false? (:pass? m)))
-      (is (= {:foo 42} (:result-data m)))))
+      (is (nil? (:result-data m)))))
   (testing "Protocol Fail"
     (let [m (tc/quick-check 1000 (prop/for-all [x gen/nat]
                                    (reify results/Result
